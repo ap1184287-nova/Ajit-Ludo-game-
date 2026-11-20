@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   Bot,
+  Check,
   Crown,
   Gift,
   GraduationCap,
@@ -25,6 +26,7 @@ import {
   PlayerSeatSetup,
 } from '../game/types';
 import { PlayerAvatar } from './PlayerAvatar';
+import { PWAInstallButton } from './PWAInstallButton';
 import { CoinSvg } from './RewardsModal';
 
 export type QuickModePreset = 'vs-ai' | 'pass-play' | 'duel-2p' | 'practice';
@@ -96,10 +98,17 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
   const hasAI = seats.some((s) => s.control === 'ai');
   const dailyAvailable = canClaimDailyReward(progression);
   const prizePool = entryFee * playerCount;
+  const activePreset: QuickModePreset = isPracticeMode
+    ? 'practice'
+    : !hasAI
+      ? 'pass-play'
+      : playerCount === 2
+        ? 'duel-2p'
+        : 'vs-ai';
 
   return (
     <div className="fixed inset-0 z-30 pointer-events-none flex flex-col justify-between p-2.5 sm:p-5 lg:p-8 safe-top safe-bottom safe-x">
-      {/* Top Play Store Profile, Coins & Audio Utility Strip */}
+      {/* Top Play Store Profile, Coins, PWA Install & Audio Utility Strip */}
       <header className="pointer-events-auto w-full flex items-center justify-between gap-2">
         {/* Player Profile System Trigger */}
         <button
@@ -118,7 +127,7 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
             <span className="text-xs sm:text-sm font-extrabold text-white truncate max-w-[105px] sm:max-w-[155px]">
               {primaryProfile ? primaryProfile.name : 'Player Profiles'}
             </span>
-            <span className="text-[11px] font-mono font-bold text-[#00d4ff] tabular-nums">
+            <span className="text-[11px] font-mono font-bold text-[#00d4ff] tabular-nums whitespace-nowrap">
               {primaryProfile
                 ? primaryProfile.playerId
                 : `${activeProfileCount} Saved`}
@@ -126,8 +135,10 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
           </div>
         </button>
 
-        {/* Right: Coins Wallet + How to Play + Music/Settings */}
+        {/* Right: PWA Install + Coins Wallet + How to Play + Music/Settings */}
         <div className="flex items-center gap-1.5">
+          <PWAInstallButton variant="compact" />
+
           <button
             type="button"
             onClick={onOpenRewards}
@@ -198,15 +209,15 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
       <div className="w-full flex justify-center lg:justify-start lg:my-auto">
         {view === 'home' ? (
           <section
-            className="animate-pop-in pointer-events-auto w-full max-w-[440px] rounded-3xl border-2 border-amber-400/50 bg-gradient-to-b from-[#1e1b4b] via-[#15173c] to-[#0d102a] shadow-[0_20px_50px_rgba(0,0,0,0.72)] p-3.5 sm:p-5 flex flex-col gap-3"
+            className="animate-pop-in pointer-events-auto w-full max-w-[448px] max-h-[82dvh] overflow-y-auto rounded-3xl border-2 border-amber-400/50 bg-gradient-to-b from-[#1e1b4b] via-[#15173c] to-[#0d102a] shadow-[0_20px_50px_rgba(0,0,0,0.72)] p-3.5 sm:p-5 flex flex-col gap-2.5"
             aria-label="LUDO MOD Home Screen"
           >
             {/* Bespoke LUDO MOD Royal Crest Lockup */}
-            <div className="flex items-center justify-between gap-2.5">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
                 <svg
-                  width="46"
-                  height="46"
+                  width="44"
+                  height="44"
                   viewBox="0 0 56 56"
                   fill="none"
                   aria-hidden="true"
@@ -252,78 +263,88 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
               <button
                 type="button"
                 onClick={onOpenTutorial}
-                className="px-2.5 py-1.5 rounded-xl bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-400/40 text-[11px] sm:text-xs font-bold text-amber-200 whitespace-nowrap shrink-0 cursor-pointer"
+                className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-400/40 text-[11px] sm:text-xs font-bold text-amber-200 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                Rules
+                How to Play
               </button>
             </div>
 
-            {/* Simple Beginner Instruction */}
-            <p className="text-xs font-semibold text-indigo-100 bg-[#101330] border border-indigo-400/25 rounded-xl px-3 py-1.5 text-center">
-              Choose a mode below or tap <span className="text-amber-300 font-extrabold">PLAY NOW</span> to start!
-            </p>
-
-            {/* 4 Play Store Gradient Mode Cards (2x2 for crisp Android legibility) */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* 4 Mode Cards (1-Tap Instant Selection right on Home) */}
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Game Modes">
               <button
                 type="button"
-                onClick={() => {
-                  onSelectQuickMode('vs-ai');
-                  setView('modes');
-                }}
-                className="min-h-[64px] rounded-2xl px-3 py-2 bg-gradient-to-b from-sky-500 to-blue-700 hover:from-sky-400 hover:to-blue-600 active:translate-y-[2px] border border-sky-200/40 shadow-[0_4px_0_#1e3a8a] flex items-center gap-2.5 text-left transition-all cursor-pointer"
+                onClick={() => onSelectQuickMode('vs-ai')}
+                aria-pressed={activePreset === 'vs-ai'}
+                className={`relative min-h-[60px] rounded-2xl px-3 py-2 bg-gradient-to-b from-sky-500 to-blue-700 hover:from-sky-400 hover:to-blue-600 active:translate-y-[2px] shadow-[0_4px_0_#1e3a8a] flex items-center gap-2 text-left transition-all cursor-pointer ${
+                  activePreset === 'vs-ai'
+                    ? 'border-2 border-amber-300 ring-2 ring-amber-300/45'
+                    : 'border border-sky-200/35 opacity-90 hover:opacity-100'
+                }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Bot size={19} className="text-white" />
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Bot size={18} className="text-white" />
                 </div>
                 <div className="flex flex-col leading-tight min-w-0">
-                  <span className="text-xs sm:text-sm font-black text-white">
+                  <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1">
                     VS Computer
+                    {activePreset === 'vs-ai' && (
+                      <Check size={13} className="text-amber-300 shrink-0" />
+                    )}
                   </span>
                   <span className="text-[11px] font-semibold text-sky-100">
-                    2–4 Players
+                    Solo vs Smart AI
                   </span>
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  onSelectQuickMode('pass-play');
-                  setView('modes');
-                }}
-                className="min-h-[64px] rounded-2xl px-3 py-2 bg-gradient-to-b from-emerald-500 to-teal-700 hover:from-emerald-400 hover:to-teal-600 active:translate-y-[2px] border border-emerald-200/40 shadow-[0_4px_0_#065f46] flex items-center gap-2.5 text-left transition-all cursor-pointer"
+                onClick={() => onSelectQuickMode('pass-play')}
+                aria-pressed={activePreset === 'pass-play'}
+                className={`relative min-h-[60px] rounded-2xl px-3 py-2 bg-gradient-to-b from-emerald-500 to-teal-700 hover:from-emerald-400 hover:to-teal-600 active:translate-y-[2px] shadow-[0_4px_0_#065f46] flex items-center gap-2 text-left transition-all cursor-pointer ${
+                  activePreset === 'pass-play'
+                    ? 'border-2 border-amber-300 ring-2 ring-amber-300/45'
+                    : 'border border-emerald-200/35 opacity-90 hover:opacity-100'
+                }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Users size={19} className="text-white" />
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Users size={18} className="text-white" />
                 </div>
                 <div className="flex flex-col leading-tight min-w-0">
-                  <span className="text-xs sm:text-sm font-black text-white">
+                  <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1">
                     Pass &amp; Play
+                    {activePreset === 'pass-play' && (
+                      <Check size={13} className="text-amber-300 shrink-0" />
+                    )}
                   </span>
                   <span className="text-[11px] font-semibold text-emerald-100">
-                    Same Phone
+                    Friends Offline
                   </span>
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  onSelectQuickMode('duel-2p');
-                  setView('modes');
-                }}
-                className="min-h-[64px] rounded-2xl px-3 py-2 bg-gradient-to-b from-rose-500 to-red-700 hover:from-rose-400 hover:to-red-600 active:translate-y-[2px] border border-rose-200/40 shadow-[0_4px_0_#881337] flex items-center gap-2.5 text-left transition-all cursor-pointer"
+                onClick={() => onSelectQuickMode('duel-2p')}
+                aria-pressed={activePreset === 'duel-2p'}
+                className={`relative min-h-[60px] rounded-2xl px-3 py-2 bg-gradient-to-b from-rose-500 to-red-700 hover:from-rose-400 hover:to-red-600 active:translate-y-[2px] shadow-[0_4px_0_#881337] flex items-center gap-2 text-left transition-all cursor-pointer ${
+                  activePreset === 'duel-2p'
+                    ? 'border-2 border-amber-300 ring-2 ring-amber-300/45'
+                    : 'border border-rose-200/35 opacity-90 hover:opacity-100'
+                }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Swords size={19} className="text-white" />
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Swords size={18} className="text-white" />
                 </div>
                 <div className="flex flex-col leading-tight min-w-0">
-                  <span className="text-xs sm:text-sm font-black text-white">
+                  <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1">
                     2P Duel
+                    {activePreset === 'duel-2p' && (
+                      <Check size={13} className="text-amber-300 shrink-0" />
+                    )}
                   </span>
                   <span className="text-[11px] font-semibold text-rose-100">
-                    Quick 1 vs 1
+                    Fast 1 vs 1 Match
                   </span>
                 </div>
               </button>
@@ -331,24 +352,116 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
               <button
                 type="button"
                 onClick={onStartPractice}
-                className="min-h-[64px] rounded-2xl px-3 py-2 bg-gradient-to-b from-violet-500 to-purple-700 hover:from-violet-400 hover:to-purple-600 active:translate-y-[2px] border border-violet-200/40 shadow-[0_4px_0_#4c1d95] flex items-center gap-2.5 text-left transition-all cursor-pointer"
+                aria-pressed={activePreset === 'practice'}
+                className={`relative min-h-[60px] rounded-2xl px-3 py-2 bg-gradient-to-b from-violet-500 to-purple-700 hover:from-violet-400 hover:to-purple-600 active:translate-y-[2px] shadow-[0_4px_0_#4c1d95] flex items-center gap-2 text-left transition-all cursor-pointer ${
+                  activePreset === 'practice'
+                    ? 'border-2 border-amber-300 ring-2 ring-amber-300/45'
+                    : 'border border-violet-200/35 opacity-90 hover:opacity-100'
+                }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <GraduationCap size={19} className="text-white" />
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <GraduationCap size={18} className="text-white" />
                 </div>
                 <div className="flex flex-col leading-tight min-w-0">
-                  <span className="text-xs sm:text-sm font-black text-white">
+                  <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1">
                     Practice
+                    {activePreset === 'practice' && (
+                      <Check size={13} className="text-amber-300 shrink-0" />
+                    )}
                   </span>
                   <span className="text-[11px] font-semibold text-violet-100">
-                    Easy + Hints
+                    Easy + Instant Play
                   </span>
                 </div>
               </button>
             </div>
 
+            {/* Quick 1-Tap Controls: Players Count (2P/3P/4P) & AI Difficulty / Stake */}
+            <div className="grid grid-cols-2 gap-2">
+              <div
+                className="p-1 rounded-2xl bg-[#0e1129] border border-indigo-400/25 grid grid-cols-3 gap-1"
+                role="group"
+                aria-label="Quick player count"
+              >
+                {([2, 3, 4] as PlayerCount[]).map((cnt) => {
+                  const active = playerCount === cnt;
+                  return (
+                    <button
+                      key={cnt}
+                      type="button"
+                      onClick={() => onSelectPlayerCount(cnt)}
+                      aria-pressed={active}
+                      className={`min-h-[38px] rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        active
+                          ? 'bg-gradient-to-b from-amber-300 to-amber-500 text-slate-950 shadow-sm'
+                          : 'text-slate-200 hover:bg-indigo-900/50 hover:text-white'
+                      }`}
+                    >
+                      {cnt}P
+                    </button>
+                  );
+                })}
+              </div>
+
+              {hasAI ? (
+                <div
+                  className="p-1 rounded-2xl bg-[#0e1129] border border-indigo-400/25 grid grid-cols-3 gap-1"
+                  role="group"
+                  aria-label="Quick AI difficulty"
+                >
+                  {(['easy', 'normal', 'hard'] as AIDifficulty[]).map((diff) => {
+                    const active = aiDifficulty === diff;
+                    return (
+                      <button
+                        key={diff}
+                        type="button"
+                        onClick={() => onSelectDifficulty(diff)}
+                        aria-pressed={active}
+                        className={`min-h-[38px] rounded-xl text-[11px] font-extrabold capitalize transition-all cursor-pointer ${
+                          active
+                            ? 'bg-gradient-to-b from-sky-400 to-blue-600 text-white shadow-sm'
+                            : 'text-slate-200 hover:bg-indigo-900/50 hover:text-white'
+                        }`}
+                      >
+                        {AI_LABEL[diff]}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div
+                  className="p-1 rounded-2xl bg-[#0e1129] border border-indigo-400/25 grid grid-cols-3 gap-1"
+                  role="group"
+                  aria-label="Quick match coin stake"
+                >
+                  {[0, 100, 250].map((fee) => {
+                    const active = entryFee === fee;
+                    const affordable = progression.coins >= fee;
+                    return (
+                      <button
+                        key={fee}
+                        type="button"
+                        disabled={!affordable}
+                        onClick={() => onSelectEntryFee(fee)}
+                        aria-pressed={active}
+                        className={`min-h-[38px] rounded-xl text-[11px] font-extrabold transition-all cursor-pointer tabular-nums ${
+                          active
+                            ? 'bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 shadow-sm'
+                            : affordable
+                              ? 'text-slate-200 hover:bg-indigo-900/50 hover:text-white'
+                              : 'text-slate-600 cursor-not-allowed'
+                        }`}
+                      >
+                        {fee === 0 ? 'Free' : fee}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {/* Active Setup Strip + Profiles & Customize Buttons */}
-            <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-2xl bg-[#101330] border border-indigo-400/25">
+            <div className="flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-2xl bg-[#101330] border border-indigo-400/25">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="flex -space-x-2 shrink-0">
                   {seats.map((seat) => (
@@ -356,28 +469,28 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
                       key={seat.color}
                       avatarId={seat.avatarId ?? DEFAULT_COLOR_AVATAR[seat.color]}
                       color={seat.color}
-                      size={24}
+                      size={22}
                     />
                   ))}
                 </div>
                 <div className="flex flex-col leading-tight min-w-0">
-                  <span className="text-xs font-extrabold text-white truncate">
+                  <span className="text-[11px] sm:text-xs font-extrabold text-white truncate">
                     {isPracticeMode
                       ? 'Practice · Easy AI'
                       : `${playerCount}P · ${hasAI ? `${AI_LABEL[aiDifficulty]} AI` : `${squadCount || playerCount}P Local`}`}
                   </span>
                   <span className="text-[11px] font-bold text-amber-300 tabular-nums truncate">
                     {entryFee > 0 && !isPracticeMode
-                      ? `Pool: ${prizePool} Coins`
+                      ? `Pool ${prizePool}`
                       : 'Free · Win Coins'}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={onOpenProfiles}
-                  className="min-h-[38px] px-2 rounded-xl bg-[#071529] hover:bg-[#0c2140] border border-[#00d4ff]/50 text-[11px] sm:text-xs font-extrabold text-[#7dd3fc] flex items-center gap-1 shrink-0 cursor-pointer transition-colors"
+                  className="min-h-[40px] px-2 rounded-xl bg-[#071529] hover:bg-[#0c2140] border border-[#00d4ff]/50 text-[11px] sm:text-xs font-extrabold text-[#7dd3fc] flex items-center gap-1 shrink-0 cursor-pointer transition-colors"
                 >
                   <Users size={12} className="text-[#00d4ff]" />
                   Profiles
@@ -385,7 +498,7 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
                 <button
                   type="button"
                   onClick={() => setView('modes')}
-                  className="min-h-[38px] px-2 rounded-xl bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-400/40 text-[11px] sm:text-xs font-bold text-white flex items-center gap-1 shrink-0 cursor-pointer transition-colors"
+                  className="min-h-[40px] px-2 rounded-xl bg-indigo-800/80 hover:bg-indigo-700 border border-indigo-400/40 text-[11px] sm:text-xs font-bold text-white flex items-center gap-1 shrink-0 cursor-pointer transition-colors"
                 >
                   <SlidersHorizontal size={12} />
                   Setup
@@ -393,12 +506,17 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
               </div>
             </div>
 
+            {/* Beginner 3-Step Quick Guide */}
+            <p className="text-[11px] font-semibold text-indigo-100 bg-[#0e1129] border border-indigo-400/20 rounded-xl px-2.5 py-1.5 text-center leading-snug">
+              <span className="text-amber-300 font-extrabold">Easy Start:</span> Roll 6 to open · Tap glowing goti · Cut opponents for bonus turn!
+            </p>
+
             {/* Primary Glossy 3D PLAY NOW CTA */}
             <button
               type="button"
               data-start="true"
               onClick={onStartMatch}
-              className="w-full min-h-[54px] rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-500 active:translate-y-[2px] text-slate-950 font-black text-lg tracking-wide flex items-center justify-center gap-2.5 shadow-[0_6px_0_#92400e,0_12px_24px_rgba(245,158,11,0.35)] border border-amber-100/80 transition-all cursor-pointer"
+              className="w-full min-h-[52px] rounded-2xl bg-gradient-to-b from-amber-300 via-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-500 active:translate-y-[2px] text-slate-950 font-black text-lg tracking-wide flex items-center justify-center gap-2.5 shadow-[0_6px_0_#92400e,0_12px_24px_rgba(245,158,11,0.35)] border border-amber-100/80 transition-all cursor-pointer"
             >
               <Play size={20} fill="currentColor" />
               PLAY NOW
@@ -406,7 +524,7 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
           </section>
         ) : (
           <section
-            className="animate-pop-in pointer-events-auto w-full max-w-[440px] rounded-3xl border-2 border-indigo-400/45 bg-gradient-to-b from-[#1e1b4b] via-[#15173c] to-[#0d102a] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-4 sm:p-5 flex flex-col gap-3 max-h-[76dvh] overflow-y-auto"
+            className="animate-pop-in pointer-events-auto w-full max-w-[448px] rounded-3xl border-2 border-indigo-400/45 bg-gradient-to-b from-[#1e1b4b] via-[#15173c] to-[#0d102a] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-4 sm:p-5 flex flex-col gap-3 max-h-[78dvh] overflow-y-auto"
             aria-label="LUDO MOD Mode & Players Setup"
           >
             {/* Mode View Header */}
@@ -422,7 +540,7 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
               </button>
               <div className="text-right">
                 <h2 className="text-base sm:text-lg font-black text-white leading-none">
-                  Game Setup
+                  Customize Match
                 </h2>
                 <p className="text-[11px] font-bold text-amber-300 uppercase mt-0.5">
                   POWERED BY AJIT KUMAR
@@ -431,7 +549,7 @@ export const TitleOverlay: React.FC<TitleOverlayProps> = ({
             </div>
 
             <p className="text-xs font-semibold text-indigo-100 bg-[#101330] border border-indigo-400/20 rounded-xl px-3 py-1.5 text-center">
-              Pick players, AI level &amp; coin stake, then tap START MATCH!
+              Tap an avatar to swap icon · Tap a player card to switch Human / AI!
             </p>
 
             {/* Player Count Selector */}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameHud } from './components/GameHud';
 import { ProfileDashboardModal } from './components/ProfileDashboardModal';
+import { OfflineIndicator } from './components/PWAInstallButton';
 import { RewardsModal } from './components/RewardsModal';
 import { SecretPinModal } from './components/SecretPinModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -110,13 +111,16 @@ function syncSeatsWithProfileSquad(
   forceAllHuman = false,
 ): PlayerSeatSetup[] {
   const defaults = createDefaultSetup(count);
+  const allPrevHuman =
+    prevSeats.length > 0 && prevSeats.every((s) => s.control === 'human');
   const base = defaults.map((def, idx) => {
     const existing = prevSeats.find((p) => p.color === def.color);
-    const control: 'human' | 'ai' = forceAllHuman
-      ? 'human'
-      : existing && !existing.profileId
-        ? existing.control
-        : def.control;
+    const control: 'human' | 'ai' =
+      forceAllHuman || allPrevHuman
+        ? 'human'
+        : existing && !existing.profileId
+          ? existing.control
+          : def.control;
     return {
       ...def,
       control,
@@ -1316,6 +1320,8 @@ export default function App() {
           }}
         />
       )}
+
+      <OfflineIndicator />
     </main>
   );
 }

@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { AIDifficulty, CameraPreset, GameSettings, GameSpeed } from '../game/types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface SettingsModalProps {
   settings: GameSettings;
@@ -276,6 +277,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
           )}
         </div>
+
+        {/* PWA Offline App Installation */}
+        <PWAInstallButton variant="full" />
 
         {/* Secret Mode PIN Unlock / Active Disable */}
         {!secretModeUnlocked ? (
